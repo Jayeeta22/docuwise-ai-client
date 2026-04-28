@@ -70,6 +70,13 @@
   padding: 24px 16px;
 }
 
+.container--wide {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 20px 24px;
+}
+
 .card {
   background: #ffffff;
   border: 1px solid #e2e8f0;

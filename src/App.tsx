@@ -2,6 +2,7 @@ import { Flex, Spin } from "antd";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import "./App.css";
 import { DashboardPage } from "../src/pages/DashboardPage";
+import { DocumentDetailPage } from "../src/pages/DocumentDetailPage";
 import { DocumentsPage } from "../src/pages/DocumentsPage";
 import { HomePage } from "../src/pages/HomePage";
 import { LoginPage } from "../src/pages/LoginPage";
@@ -12,6 +13,7 @@ import type { AuthUser } from "./types/auth";
 function App() {
   const location = useLocation();
   const isAuthRoute = location.pathname === "/login" || location.pathname === "/register";
+  const isDocumentsRoute = location.pathname === "/documents" || location.pathname.startsWith("/documents/");
   const { data: meData, isLoading: isMeLoading } = useGetMeQuery();
   const [logout, { isLoading: isLogoutLoading }] = useLogoutMutation();
 
@@ -55,7 +57,7 @@ function App() {
         </header>
       ) : null}
 
-      <main className={isAuthRoute ? "main main--auth" : "container"}>
+      <main className={isAuthRoute ? "main main--auth" : `container${isDocumentsRoute ? " container--wide" : ""}`}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route
@@ -65,6 +67,10 @@ function App() {
           <Route
             path="/documents"
             element={authUser ? <DocumentsPage /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/documents/:id"
+            element={authUser ? <DocumentDetailPage /> : <Navigate to="/login" replace />}
           />
           <Route
             path="/login"
