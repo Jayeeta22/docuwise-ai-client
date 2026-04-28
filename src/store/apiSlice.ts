@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { getApiBaseUrl } from "../lib/apiBase";
 import type { AuthPayload, AuthResponse } from "../types/auth";
+import type { DocumentDetail, DocumentListItem } from "../types/document";
 
 export const apiSlice = createApi({
   reducerPath: "api",
@@ -8,7 +9,7 @@ export const apiSlice = createApi({
     baseUrl: getApiBaseUrl(),
     credentials: "include",
   }),
-  tagTypes: ["Auth"],
+  tagTypes: ["Auth", "Document"],
   endpoints: (builder) => ({
     getMe: builder.query<AuthResponse, void>({
       query: () => "/auth/me",
@@ -44,15 +45,43 @@ export const apiSlice = createApi({
         url: "/auth/logout",
         method: "POST",
       }),
-      invalidatesTags: ["Auth"],
+      invalidatesTags: ["Auth", "Document"],
+    }),
+    getDocuments: builder.query<{ documents: DocumentListItem[] }, void>({
+      query: () => "/documents",
+      providesTags: ["Document"],
+    }),
+    getDocument: builder.query<{ document: DocumentDetail }, string>({
+      query: (id) => `/documents/${encodeURIComponent(id)}`,
+      providesTags: (_result, _err, id) => [{ type: "Document", id }],
+    }),
+    uploadDocument: builder.mutation<{ document: DocumentListItem }, FormData>({
+      query: (formData) => ({
+        url: "/documents/upload",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["Document"],
+    }),
+    chatDocument: builder.mutation<{ reply: string }, { id: string; message: string }>({
+      query: ({ id, message }) => ({
+        url: `/documents/${encodeURIComponent(id)}/chat`,
+        method: "POST",
+        body: { message },
+      }),
     }),
   }),
 });
 
 export const {
   useGetMeQuery,
+  useLazyGetMeQuery,
   useHealthQuery,
   useLoginMutation,
   useRegisterMutation,
   useLogoutMutation,
+  useGetDocumentsQuery,
+  useGetDocumentQuery,
+  useUploadDocumentMutation,
+  useChatDocumentMutation,
 } = apiSlice;

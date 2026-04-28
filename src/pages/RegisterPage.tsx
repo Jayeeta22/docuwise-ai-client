@@ -13,8 +13,8 @@ import {
   theme,
 } from "antd";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useRegisterMutation } from "../store/apiSlice";
+import { Link, useNavigate } from "react-router-dom";
+import { useLazyGetMeQuery, useRegisterMutation } from "../store/apiSlice";
 import { getApiErrorMessage } from "../utils/rtkError";
 
 type RegisterFormValues = {
@@ -24,10 +24,12 @@ type RegisterFormValues = {
 };
 
 export function RegisterPage() {
+  const navigate = useNavigate();
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
   const [form] = Form.useForm<RegisterFormValues>();
   const [register, { isLoading }] = useRegisterMutation();
+  const [loadMe, { isFetching: isCheckingSession }] = useLazyGetMeQuery();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   return (
@@ -108,6 +110,8 @@ export function RegisterPage() {
                     email: email.trim(),
                     password,
                   }).unwrap();
+                  await loadMe(undefined, true).unwrap();
+                  navigate("/dashboard", { replace: true });
                 } catch (error: unknown) {
                   setSubmitError(
                     getApiErrorMessage(
@@ -192,7 +196,13 @@ export function RegisterPage() {
               ) : null}
 
               <Form.Item style={{ marginBottom: 0 }}>
-                <Button type="primary" htmlType="submit" size="large" block loading={isLoading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  size="large"
+                  block
+                  loading={isLoading || isCheckingSession}
+                >
                   Create account
                 </Button>
               </Form.Item>

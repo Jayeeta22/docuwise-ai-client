@@ -13,8 +13,8 @@ import {
   theme,
 } from "antd";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useLoginMutation } from "../store/apiSlice";
+import { Link, useNavigate } from "react-router-dom";
+import { useLazyGetMeQuery, useLoginMutation } from "../store/apiSlice";
 import { getApiErrorMessage } from "../utils/rtkError";
 
 type LoginFormValues = {
@@ -23,10 +23,12 @@ type LoginFormValues = {
 };
 
 export function LoginPage() {
+  const navigate = useNavigate();
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
   const [form] = Form.useForm<LoginFormValues>();
   const [login, { isLoading }] = useLoginMutation();
+  const [loadMe, { isFetching: isCheckingSession }] = useLazyGetMeQuery();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   return (
@@ -107,6 +109,8 @@ export function LoginPage() {
                     email: values.email.trim(),
                     password: values.password,
                   }).unwrap();
+                  await loadMe(undefined, true).unwrap();
+                  navigate("/dashboard", { replace: true });
                 } catch (error: unknown) {
                   setSubmitError(
                     getApiErrorMessage(error, "Sign-in failed. Check your details and try again."),
@@ -163,7 +167,13 @@ export function LoginPage() {
               ) : null}
 
               <Form.Item style={{ marginBottom: 0 }}>
-                <Button type="primary" htmlType="submit" size="large" block loading={isLoading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  size="large"
+                  block
+                  loading={isLoading || isCheckingSession}
+                >
                   Sign in
                 </Button>
               </Form.Item>

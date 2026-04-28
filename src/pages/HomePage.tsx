@@ -24,8 +24,8 @@ import { useGetMeQuery, useHealthQuery } from "../store/apiSlice";
 export function HomePage() {
   const { token } = theme.useToken();
   const screens = Grid.useBreakpoint();
-  const { data: meData, isError: isMeError } = useGetMeQuery();
-  const authUser = isMeError ? null : (meData?.user ?? null);
+  const { data: meData } = useGetMeQuery();
+  const authUser = meData?.user ?? null;
   const { isLoading, isFetching, isError, isSuccess } = useHealthQuery();
 
   const healthPending = isLoading || isFetching;
