@@ -5,6 +5,7 @@ import { DashboardPage } from "../src/pages/DashboardPage";
 import { DocumentDetailPage } from "../src/pages/DocumentDetailPage";
 import { DocumentsPage } from "../src/pages/DocumentsPage";
 import { HomePage } from "../src/pages/HomePage";
+import { useI18n } from "../src/i18n";
 import { LoginPage } from "../src/pages/LoginPage";
 import { RegisterPage } from "../src/pages/RegisterPage";
 import { useGetMeQuery, useLogoutMutation } from "./store/apiSlice";
@@ -16,6 +17,7 @@ function App() {
   const isDocumentsRoute = location.pathname === "/documents" || location.pathname.startsWith("/documents/");
   const { data: meData, isLoading: isMeLoading } = useGetMeQuery();
   const [logout, { isLoading: isLogoutLoading }] = useLogoutMutation();
+  const { t } = useI18n();
 
   // Prefer cached user after login/register patches. Do not gate on isError alone—initial /me 401
   // can leave isError true until refetch even after updateQueryData fills the cache.
@@ -41,16 +43,16 @@ function App() {
             DocLens AI
           </Link>
           <nav>
-            <Link to="/dashboard">Dashboard</Link>
-            {authUser ? <Link to="/documents">Documents</Link> : null}
+            <Link to="/dashboard">{t("nav.dashboard")}</Link>
+            {authUser ? <Link to="/documents">{t("nav.documents")}</Link> : null}
             {authUser ? (
               <button type="button" onClick={handleLogout} disabled={isLogoutLoading}>
-                {isLogoutLoading ? "Signing out…" : "Logout"}
+                {isLogoutLoading ? t("nav.signingOut") : t("nav.logout")}
               </button>
             ) : (
               <>
-                <Link to="/login">Login</Link>
-                <Link to="/register">Register</Link>
+                <Link to="/login">{t("nav.login")}</Link>
+                <Link to="/register">{t("nav.register")}</Link>
               </>
             )}
           </nav>

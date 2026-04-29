@@ -3,6 +3,13 @@ import { getApiBaseUrl } from "../lib/apiBase";
 import type { AuthPayload, AuthResponse } from "../types/auth";
 import type { DocumentDetail, DocumentListItem } from "../types/document";
 
+export type ChatUsage = {
+  limit: number;
+  used: number;
+  remaining: number;
+  monthKey: string;
+};
+
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
@@ -63,11 +70,31 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ["Document"],
     }),
-    chatDocument: builder.mutation<{ reply: string }, { id: string; message: string }>({
-      query: ({ id, message }) => ({
+    deleteDocument: builder.mutation<{ success: boolean }, string>({
+      query: (id) => ({
+        url: `/documents/${encodeURIComponent(id)}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Document"],
+    }),
+    chatDocument: builder.mutation<{ reply: string; usage?: ChatUsage }, { id: string; message: string; replyLanguage?: string }>({
+      query: ({ id, message, replyLanguage }) => ({
         url: `/documents/${encodeURIComponent(id)}/chat`,
         method: "POST",
-        body: { message },
+        body: { message, replyLanguage },
+      }),
+    }),
+    getChatUsage: builder.query<ChatUsage, void>({
+      query: () => "/documents/chat/limit",
+    }),
+    translateDocument: builder.mutation<
+      { translatedExtractedText: string; translatedTablesPreview: string; targetLanguage: string },
+      { id: string; targetLanguage: string }
+    >({
+      query: ({ id, targetLanguage }) => ({
+        url: `/documents/${encodeURIComponent(id)}/translate`,
+        method: "POST",
+        body: { targetLanguage },
       }),
     }),
   }),
@@ -83,5 +110,8 @@ export const {
   useGetDocumentsQuery,
   useGetDocumentQuery,
   useUploadDocumentMutation,
+  useDeleteDocumentMutation,
   useChatDocumentMutation,
+  useGetChatUsageQuery,
+  useTranslateDocumentMutation,
 } = apiSlice;
