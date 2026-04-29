@@ -3,7 +3,7 @@ import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import "./App.css";
 import { DashboardPage } from "../src/pages/DashboardPage";
 import { DocumentDetailPage } from "../src/pages/DocumentDetailPage";
-import { DocumentsPage } from "../src/pages/DocumentsPage";
+import DocumentsPage from "../src/pages/DocumentsPage";
 import { HomePage } from "../src/pages/HomePage";
 import { useI18n } from "../src/i18n";
 import { LoginPage } from "../src/pages/LoginPage";

@@ -29,6 +29,23 @@ export function DocumentDetailPage() {
   const doc = data?.document;
   const fileUrl = id ? `${getApiBaseUrl()}/documents/${encodeURIComponent(id)}/file` : "";
   const detailError = error ? getApiErrorMessage(error, "Could not load document details.") : null;
+  const resumeSkills = doc
+    ? Array.from(
+        new Set(
+          [...(doc.keyPhrases ?? []), ...(doc.entities ?? []).map((e) => e.text)]
+            .map((s) => s.trim())
+            .filter(Boolean),
+        ),
+      ).slice(0, 40)
+    : [];
+
+  const generalSummary = doc?.extractedText
+    ? doc.extractedText
+        .replace(/\s+/g, " ")
+        .split(/(?<=[.!?])\s+/)
+        .slice(0, 4)
+        .join(" ")
+    : "";
 
   return (
     <div>
@@ -164,7 +181,116 @@ export function DocumentDetailPage() {
                     : translatedPreview?.extractedText || "(translating...)"}
                 </pre>
 
-                {doc.keyValuePairs.length > 0 ? (
+                {doc.category === "resume" ? (
+                  <>
+                    <Typography.Title level={5}>Skills</Typography.Title>
+                    {resumeSkills.length ? (
+                      <Descriptions size="small" column={1} bordered style={{ marginBottom: token.marginMD }}>
+                        <Descriptions.Item label="Detected skills">{resumeSkills.join(", ")}</Descriptions.Item>
+                      </Descriptions>
+                    ) : (
+                      <Typography.Text type="secondary">No skills detected yet.</Typography.Text>
+                    )}
+                  </>
+                ) : null}
+
+                {doc.category === "general" ? (
+                  <>
+                    <Typography.Title level={5}>Summary</Typography.Title>
+                    <pre
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        fontSize: 12,
+                        maxHeight: 140,
+                        overflow: "auto",
+                        padding: token.paddingSM,
+                        background: token.colorFillAlter,
+                        borderRadius: token.borderRadius,
+                        marginBottom: token.marginMD,
+                      }}
+                    >
+                      {generalSummary || "No summary available."}
+                    </pre>
+                  </>
+                ) : null}
+                {doc.category === "invoice" && doc.invoiceFields ? (
+                  <>
+                    <Typography.Title level={5}>Invoice fields</Typography.Title>
+                    <Descriptions size="small" column={1} bordered style={{ marginBottom: token.marginMD }}>
+                      <Descriptions.Item label="Invoice number">{doc.invoiceFields.invoiceNumber || "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Vendor">{doc.invoiceFields.vendorName || "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Invoice date">{doc.invoiceFields.invoiceDate || "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Due date">{doc.invoiceFields.dueDate || "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Currency">{doc.invoiceFields.currency || "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Subtotal">{doc.invoiceFields.subtotal ?? "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Tax">{doc.invoiceFields.tax ?? "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Total">{doc.invoiceFields.total ?? "—"}</Descriptions.Item>
+                    </Descriptions>
+
+                    {doc.invoiceFields.lineItems?.length ? (
+                      <pre
+                        style={{
+                          whiteSpace: "pre-wrap",
+                          fontSize: 12,
+                          maxHeight: 180,
+                          overflow: "auto",
+                          padding: token.paddingSM,
+                          background: token.colorFillAlter,
+                          borderRadius: token.borderRadius,
+                          marginTop: token.marginSM,
+                        }}
+                      >
+                        {doc.invoiceFields.lineItems
+                          .slice(0, 30)
+                          .map((li, i) => {
+                            const desc = li.description || `Item ${i + 1}`;
+                            const qty = li.quantity != null ? ` x ${li.quantity}` : "";
+                            const amount = li.amount ?? li.unitPrice ?? "";
+                            return `- ${desc}${qty} => ${amount || "—"}`;
+                          })
+                          .join("\n")}
+                      </pre>
+                    ) : null}
+                  </>
+                ) : doc.category === "receipt" && doc.receiptFields ? (
+                  <>
+                    <Typography.Title level={5}>Receipt fields</Typography.Title>
+                    <Descriptions size="small" column={1} bordered style={{ marginBottom: token.marginMD }}>
+                      <Descriptions.Item label="Merchant">{doc.receiptFields.merchantName || "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Receipt number">{doc.receiptFields.receiptNumber || "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Transaction date">{doc.receiptFields.transactionDate || "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Currency">{doc.receiptFields.currency || "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Subtotal">{doc.receiptFields.subtotal ?? "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Tax">{doc.receiptFields.tax ?? "—"}</Descriptions.Item>
+                      <Descriptions.Item label="Total">{doc.receiptFields.total ?? "—"}</Descriptions.Item>
+                    </Descriptions>
+
+                    {doc.receiptFields.lineItems?.length ? (
+                      <pre
+                        style={{
+                          whiteSpace: "pre-wrap",
+                          fontSize: 12,
+                          maxHeight: 180,
+                          overflow: "auto",
+                          padding: token.paddingSM,
+                          background: token.colorFillAlter,
+                          borderRadius: token.borderRadius,
+                          marginTop: token.marginSM,
+                        }}
+                      >
+                        {doc.receiptFields.lineItems
+                          .slice(0, 30)
+                          .map((li, i) => {
+                            const desc = li.description || `Item ${i + 1}`;
+                            const qty = li.quantity != null ? ` x ${li.quantity}` : "";
+                            const amount = li.amount ?? li.unitPrice ?? "";
+                            return `- ${desc}${qty} => ${amount || "—"}`;
+                          })
+                          .join("\n")}
+                      </pre>
+                    ) : null}
+                  </>
+                ) : doc.keyValuePairs.length > 0 ? (
                   <>
                     <Typography.Title level={5}>Detected key / value pairs</Typography.Title>
                     <Descriptions size="small" column={1} bordered>

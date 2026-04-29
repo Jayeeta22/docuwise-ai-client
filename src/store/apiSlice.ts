@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { getApiBaseUrl } from "../lib/apiBase";
 import type { AuthPayload, AuthResponse } from "../types/auth";
-import type { DocumentDetail, DocumentListItem } from "../types/document";
+import type { DocumentCategory, DocumentDetail, DocumentListItem } from "../types/document";
 
 export type ChatUsage = {
   limit: number;
@@ -54,8 +54,14 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ["Auth", "Document"],
     }),
-    getDocuments: builder.query<{ documents: DocumentListItem[] }, void>({
-      query: () => "/documents",
+    getDocuments: builder.query<
+      { documents: DocumentListItem[] },
+      { category?: DocumentCategory } | undefined
+    >({
+      query: (args) => {
+        if (!args?.category) return "/documents";
+        return `/documents?category=${encodeURIComponent(args.category)}`;
+      },
       providesTags: ["Document"],
     }),
     getDocument: builder.query<{ document: DocumentDetail }, string>({
